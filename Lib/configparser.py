@@ -151,11 +151,11 @@ import warnings
 __all__ = ["NoSectionError", "DuplicateOptionError", "DuplicateSectionError",
            "NoOptionError", "InterpolationError", "InterpolationDepthError",
            "InterpolationMissingOptionError", "InterpolationSyntaxError",
-           "ParsingError", "MissingSectionHeaderError",
-           "ConfigParser", "SafeConfigParser", "RawConfigParser",
-           "Interpolation", "BasicInterpolation",  "ExtendedInterpolation",
-           "LegacyInterpolation", "SectionProxy", "ConverterMapping",
-           "DEFAULTSECT", "MAX_INTERPOLATION_DEPTH"]
+           "InterpolationIsNotInstantiatedError", "ParsingError",
+           "MissingSectionHeaderError", "ConfigParser", "SafeConfigParser",
+           "RawConfigParser", "Interpolation", "BasicInterpolation",
+           "ExtendedInterpolation", "LegacyInterpolation", "SectionProxy",
+           "ConverterMapping", "DEFAULTSECT", "MAX_INTERPOLATION_DEPTH"]
 
 _default_dict = dict
 DEFAULTSECT = "DEFAULT"
@@ -279,6 +279,15 @@ class InterpolationSyntaxError(InterpolationError):
     Current implementation raises this exception when the source text into
     which substitutions are made does not conform to the required syntax.
     """
+
+class InterpolationIsNotInstantiatedError(Error):
+    """Raised when the the Interpolation has not been instantiated
+
+    Giving users faster and more clear feedback on how to fix a common error
+    """
+    def __init__(self):
+        msg = ("The interpolator must be instantiated")
+        Error.__init__(self, msg)
 
 
 class InterpolationDepthError(InterpolationError):
@@ -633,6 +642,8 @@ class RawConfigParser(MutableMapping):
             self._interpolation = self._DEFAULT_INTERPOLATION
         if self._interpolation is None:
             self._interpolation = Interpolation()
+        if isinstance(self._interpolation, type):
+            raise InterpolationIsNotInstantiatedError()
         if converters is not _UNSET:
             self._converters.update(converters)
         if defaults:
